@@ -18,7 +18,7 @@
 // stops exactly at the open door; and the voice is its own, no stock mystery
 // phrase anywhere in it.
 
-import { mkdirSync, writeFileSync } from "node:fs";
+import { mkdirSync, renameSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 const OUTPUT_DIR = process.env.MAKEFUN_OUTPUT_DIR ?? "/output";
@@ -36,4 +36,8 @@ if (LENGTH < 1 || LENGTH > 280 || ENTRY.trim().length === 0) {
 }
 
 mkdirSync(OUTPUT_DIR, { recursive: true });
-writeFileSync(join(OUTPUT_DIR, "entry.txt"), ENTRY, "utf8");
+// Write atomically: a partial write can never leave a truncated entry.txt.
+const target = join(OUTPUT_DIR, "entry.txt");
+const tmp = `${target}.tmp`;
+writeFileSync(tmp, ENTRY, "utf8");
+renameSync(tmp, target);
